@@ -102,7 +102,6 @@ public class CookieHeaderMediator extends AbstractMediator {
 							if (log.isDebugEnabled()) {
 								log.debug(entry.getKey() + ":" + cookie.getName() + "=" + cookie.getValue());
 							}
-//							System.out.println(entry.getKey() + ":" + cookie.getName() + "=" + cookie.getValue());
 						}
 					}
 					synCtx.setProperty(CookieHeaderMediatorConstants.COOKIES_MAP, cookiesMap);

@@ -56,6 +56,8 @@ public class CookieHeaderRetriever extends CookieHeaderMediator {
 				}
 			}
 
+			// Checking if the cookie is set
+			// The default Cookie cookie = new Cookie(); creates a cookie object with "noname" as the cookie name
 			if (!"noname".equals(cookie.getName())) {
 				if (cookieDomain != null && !"".equals(cookieDomain)) {
 					if (cookiesMap.containsKey(cookieDomain)) {
@@ -143,25 +145,42 @@ public class CookieHeaderRetriever extends CookieHeaderMediator {
 
 	public Map<String, ArrayList<Cookie>> mergeCookiesMap(Map<String, ArrayList<Cookie>> previousCookiesMap,
 	                                                      Map<String, ArrayList<Cookie>> currentCookiesMap ) {
-		Map<String, ArrayList<Cookie>> cookiesMap = new HashMap<>();
+		// create a new cookiesMap and populate it with previousCookiesMap entries
+		Map<String, ArrayList<Cookie>> cookiesMap = new HashMap<>(previousCookiesMap);
+
 		for (Map.Entry<String, ArrayList<Cookie>> entry : currentCookiesMap.entrySet()) {
+			/*
+			* Check whether the cookie domains in the currentCookiesMap already exist in the previousCookiesMap
+			* If previousCookiesMap contains a cookie domain which exists in the currentCookiesMap
+			* Insert the new cookies of currentCookiesList to the previousCookiesList against the existing cookie domain
+			* Replace the existing cookies in the previousCookiesList with the new cookies from the currentCookiesList
+			* */
 			if (previousCookiesMap.containsKey(entry.getKey())) {
-				ArrayList<Cookie> previousCookiesMapValue = previousCookiesMap.get(entry.getKey());
-				ArrayList<Cookie> currentCookiesMapValue = entry.getValue();
-				for (Cookie currentCookie:currentCookiesMapValue) {
-					for (int i=0; i < previousCookiesMapValue.size(); i++) {
-						if (currentCookie.getName().equals(previousCookiesMapValue.get(i).getName())) {
-							previousCookiesMapValue.set(i, currentCookie);
-						} else {
-							previousCookiesMapValue.add(currentCookie);
+				ArrayList<Cookie> previousCookiesList = previousCookiesMap.get(entry.getKey());
+				ArrayList<Cookie> currentCookiesList = entry.getValue();
+				for (Cookie currentCookie:currentCookiesList) {
+					boolean currentCookieAlreadyExists = false;
+					int index = 0;
+					for (int i=0; i < previousCookiesList.size(); i++) {
+						if (currentCookie.getName().equals(previousCookiesList.get(i).getName())) {
+							currentCookieAlreadyExists = true;
+							index = i;
 						}
 					}
-				}
-				cookiesMap.put(entry.getKey(), previousCookiesMapValue);
+					if (currentCookieAlreadyExists) {
+						previousCookiesList.set(index, currentCookie);
+					} else {
+						previousCookiesList.add(currentCookie);
+					}
+ 				}
+				// Update the cookiesMap with the modified previousCookiesList for already existing cookie domains
+				cookiesMap.put(entry.getKey(), previousCookiesList);
 			} else {
-				cookiesMap.putAll(previousCookiesMap);
-				cookiesMap.putAll(currentCookiesMap);
-				break;
+				/*
+				 * previousCookiesMap doesn't have cookie domains which exists in the currentCookiesMap
+				 * Insert the current cookies list to the cookiesMap against the cookie domain
+				 * */
+				cookiesMap.put(entry.getKey(), entry.getValue());
 			}
 		}
 		return cookiesMap;
